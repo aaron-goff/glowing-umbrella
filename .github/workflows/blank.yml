@@ -2,7 +2,7 @@ name: Check Build Status
 
 on:
   schedule:
-    - cron: "0 11 * * 1-5" # 7am EST (11am UTC) Monday-Friday
+    - cron: "0 11 * * *" # 7am EST
   workflow_dispatch: # Allows manual triggering
 
 jobs:
@@ -44,17 +44,17 @@ jobs:
           if [ "$BUILD_STATUS" == "completed" ] && [ "$BUILD_RESULT" == "failed" ]; then
             curl -X POST -H 'Content-type: application/json' \
               --data "{
-                \"text\": \"🚨 *Pipeline Build Failed* 🚨\n
-                The scheduled build for uva-dashboard-ui has failed.\n
-                <$BUILD_URL|View Build Details>\"
+                \"text\": \"🚨 🚨 🚨 *Pipeline Build Failed* 🚨 🚨 🚨\n
+                :bear-stare: :ohno: :sob: The scheduled build for uva-dashboard-ui has failed. :sob: :ohno: :bear-stare:\n
+                    <$BUILD_URL|View Build Details>\"
               }" \
               ${{ secrets.SLACK_WEBHOOK_URL }}
           elif [ "$BUILD_STATUS" == "completed" ] && [ "$BUILD_RESULT" == "succeeded" ]; then
             curl -X POST -H 'Content-type: application/json' \
               --data "{
-                \"text\": \"✅ *Pipeline Build Succeeded* ✅\n
-                The scheduled build for uva-dashboard-ui completed successfully.\n
-                <$BUILD_URL|View Build Details>\"
+                \"text\": \"✅ ✅ ✅ *Pipeline Build Succeeded* ✅ ✅ ✅\n
+                :tada: :tadaco: :sall_good: The Nightly Build Last Night? 0 failures :sall_good: :tada: :tadaco:\n
+                    <$BUILD_URL|View Build Details>\"
               }" \
               ${{ secrets.SLACK_WEBHOOK_URL }}
           fi
