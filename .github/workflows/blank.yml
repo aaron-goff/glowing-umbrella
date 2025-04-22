@@ -1,0 +1,58 @@
+name: Check Build Status
+
+on:
+  schedule:
+    - cron: "0 11 * * 1-5" # 7am EST (11am UTC) Monday-Friday
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  check-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Azure DevOps Login
+        run: |
+          echo ${{ secrets.AZURE_DEVOPS_PAT }} | az devops login
+
+      - name: Check Build Status
+        run: |
+          LATEST_BUILD=$(az pipelines runs list \
+            --pipeline-ids 11 \
+            --branch main \
+            --reason schedule \
+            --top 1 \
+            --output json)
+
+          BUILD_STATUS=$(echo "$LATEST_BUILD" | jq -r '.[0].status')
+          BUILD_RESULT=$(echo "$LATEST_BUILD" | jq -r '.[0].result')
+          BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id')
+          BUILD_URL="https://dev.azure.com/vaconnects/VAConnects/_build/results?buildId=$BUILD_ID"
+
+          if [ "$BUILD_STATUS" == "completed" ] && [ "$BUILD_RESULT" == "failed" ]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{
+                \"text\": \"🚨 *Pipeline Build Failed* 🚨\n
+                The scheduled build for uva-dashboard-ui has failed.\n
+                <$BUILD_URL|View Build Details>\"
+              }" \
+              ${{ secrets.SLACK_WEBHOOK_URL }}
+          elif [ "$BUILD_STATUS" == "completed" ] && [ "$BUILD_RESULT" == "succeeded" ]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{
+                \"text\": \"✅ *Pipeline Build Succeeded* ✅\n
+                The scheduled build for uva-dashboard-ui completed successfully.\n
+                <$BUILD_URL|View Build Details>\"
+              }" \
+              ${{ secrets.SLACK_WEBHOOK_URL }}
+          fi
