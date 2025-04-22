@@ -28,6 +28,8 @@ jobs:
       - name: Check Build Status
         run: |
           LATEST_BUILD=$(az pipelines runs list \
+            --organization ${{ secrets.AZURE_DEVOPS_ORG }} \
+            --project ${{ secrets.AZURE_DEVOPS_PROJECT }} \
             --pipeline-ids 11 \
             --branch main \
             --reason schedule \
@@ -37,7 +39,7 @@ jobs:
           BUILD_STATUS=$(echo "$LATEST_BUILD" | jq -r '.[0].status')
           BUILD_RESULT=$(echo "$LATEST_BUILD" | jq -r '.[0].result')
           BUILD_ID=$(echo "$LATEST_BUILD" | jq -r '.[0].id')
-          BUILD_URL="https://dev.azure.com/vaconnects/VAConnects/_build/results?buildId=$BUILD_ID"
+          BUILD_URL="${{ secrets.AZURE_DEVOPS_ORG }}/${{ secrets.AZURE_DEVOPS_PROJECT }}/_build/results?buildId=$BUILD_ID"
 
           if [ "$BUILD_STATUS" == "completed" ] && [ "$BUILD_RESULT" == "failed" ]; then
             curl -X POST -H 'Content-type: application/json' \
