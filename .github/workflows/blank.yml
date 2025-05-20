@@ -2,7 +2,7 @@ name: Check Build Status
 
 on:
   schedule:
-    - cron: "0 11 * * *" # 7am EST
+    - cron: "0 9 * * *" # 4am EST
   workflow_dispatch: # Allows manual triggering
 
 jobs:
